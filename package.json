@@ -1,6 +1,10 @@
 {
   "type": "module",
+  "scripts": {
+    "compile-grammar": "java -jar antlr-4.9.2-complete.jar -o inputParser/compiled -Dlanguage=JavaScript inputParser/math.g4"
+  },
   "dependencies": {
+    "antlr4": "^4.9.2",
     "lodash": "^4.17.21"
   }
 }
