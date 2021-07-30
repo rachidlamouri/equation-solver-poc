@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { parseExpression } from './inputParser/parseExpression.js';
+import { parseExpression } from './expressions/index.js';
 
 const inputs = _([
   // single value
