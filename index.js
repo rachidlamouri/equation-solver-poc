@@ -49,10 +49,11 @@ const inputs = _([
   'a + b * c + (d - e) + f / g',
 ])
   .map((expression, index) => [`x${index}`, expression])
-  .fromPairs()
   .tap((input) => {
-    log('INPUT', input);
+    const inputEquations = input.map(([leftInput, rightInput]) => `${leftInput} = ${rightInput}`)
+    log('INPUT', inputEquations);
   })
+  .fromPairs()
   .mapValues((expression, key) => `${key} - (${expression})`)
   .mapValues((expression) => parseExpression(expression))
   .mapValues((parsedExpression) => new Equation({
