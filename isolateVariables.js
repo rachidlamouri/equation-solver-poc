@@ -1,4 +1,3 @@
-import { Equation } from './equation.js';
 import {
   BinaryExpression,
   ConstantExpression,
@@ -6,17 +5,13 @@ import {
   VariableExpression,
 } from './expressions/index.js';
 
-const parseEquations = (equations, parsedEquations = [], iteration = 0) => {
-  console.log(iteration);
-  console.log('EQS', JSON.stringify(equations, null, 2));
-  console.log('PEQS', JSON.stringify(parsedEquations, null, 2));
+const parseEquations = (equations, parsedEquations = []) => {
   if (equations.length === 0) {
     return parsedEquations;
   }
 
   const nextEquations = [];
   equations.forEach((equation) => {
-    console.log('EQ', JSON.stringify(equation, null, 2));
     const { leftExpression } = equation;
 
     switch(true) {
@@ -42,15 +37,7 @@ const parseEquations = (equations, parsedEquations = [], iteration = 0) => {
   return parseEquations(
     nextEquations,
     parsedEquations,
-    iteration += 1
   )
 };
 
-export const isolateVariables = (parsedExpression) => {
-  const equation = new Equation({
-    leftExpression: parsedExpression,
-    rightExpression: ConstantExpression.parse(0),
-  });
-
-  return parseEquations([equation]);
-};
+export const isolateVariables = (equation) => parseEquations([equation]);

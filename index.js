@@ -1,6 +1,8 @@
 import _ from 'lodash';
 import { Equation } from './equation.js';
 import { parseExpression } from './expressions/index.js';
+import { isolateVariables } from './isolateVariables.js';
+import fs from 'fs';
 
 const log = (label, data) => {
   console.log(label);
@@ -8,7 +10,7 @@ const log = (label, data) => {
   console.log();
 };
 
-const inputs = _([
+_([
   // single value
   '1',
   'a',
@@ -48,22 +50,39 @@ const inputs = _([
   // order of operations
   'a + b * c + (d - e) + f / g',
 ])
-  .map((expression, index) => [`x${index}`, expression])
-  .tap((input) => {
-    const inputEquations = input.map(([leftInput, rightInput]) => `${leftInput} = ${rightInput}`)
+  .map((expression, index) => ({
+    leftInput: 'x',
+    rightInput: expression,
+    serializedInput: `x = ${expression}`,
+  }))
+  .tap((allData) => {
+    const inputEquations = _.map(allData, 'serializedInput');
     log('INPUT', inputEquations);
   })
-  .fromPairs()
-  .mapValues((expression, key) => `${key} - (${expression})`)
-  .mapValues((expression) => parseExpression(expression))
-  .mapValues((parsedExpression) => new Equation({
-    leftExpression: parsedExpression,
-    rightExpression: parseExpression('0'),
+  .map((data) => ({
+    ...data,
+    parsedEquation: new Equation({
+      leftExpression: parseExpression(`${data.leftInput} - (${data.rightInput})`),
+      rightExpression: parseExpression('0'),
+    }),
   }))
-  .tap((equations) => {
-    const serializedEquations = Object.entries(equations).map(([, equation]) => equation.serialize());
+  .tap((allData) => {
+    const serializedEquations = Object.entries(allData).map(([, { parsedEquation }]) => parsedEquation.serialize());
     log('PARSED', serializedEquations);
   })
-  .value();
+  .map((data) => ({
+    ...data,
+    solvedEquations: isolateVariables(data.parsedEquation),
+  }))
+  .tap((allData) => {
+    const allSerializedSolvedEquations = (
+      _(allData)
+        .keyBy('serializedInput')
+        .mapValues(({ solvedEquations }) => solvedEquations.map((equation) => equation.simplify().serialize()))
+        .value()
+    );
 
-console.log(JSON.stringify(inputs, null, 2));
+    log('SOLVED', allSerializedSolvedEquations);
+    fs.writeFileSync('./out.json', JSON.stringify(allSerializedSolvedEquations, null, 2));
+  })
+  .value();

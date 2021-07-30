@@ -2,3 +2,4 @@
 /inputParser/.antlr
 /inputParser/compiled
 antlr-4.9.2-complete.jar
+out.json

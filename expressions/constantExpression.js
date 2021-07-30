@@ -4,7 +4,7 @@ export class ConstantExpression extends Expression{
   constructor(properties) {
     const { constantValue } = properties;
     super(properties);
-    this.value = constantValue;
+    this.value = parseFloat(constantValue);
   }
 
   isZero() {
