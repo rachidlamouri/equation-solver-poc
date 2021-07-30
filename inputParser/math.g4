@@ -1,9 +1,9 @@
 grammar math;
 
-input: expression EOF;
+input: parenthesizedExpressionNode=expression EOF;
 
 expression:
-  '(' parenthesizedNode=expression ')'
+  '(' parenthesizedExpressionNode=expression ')'
   | leftExpressionNode=expression operatorNode=('*' | '/') rightExpressionNode=expression
   | leftExpressionNode=expression operatorNode=('+' | '-') rightExpressionNode=expression
   | operatorNode=('+' | '-') unaryExpressionNode=expression

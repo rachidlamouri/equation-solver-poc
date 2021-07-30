@@ -1,26 +1,53 @@
+import _ from 'lodash';
 import antlr4 from 'antlr4';
 import Lexer from './compiled/mathLexer.js';
 import Parser from './compiled/mathParser.js';
-import MathListener from './compiled/mathListener.js';
 
-class CustomListener extends MathListener {
-  enterExpression(ctx) {
-    console.log('ENTER EXPR', ctx.getText());
+class Visitor {
+  visitChildren(context) {
+    const properties = _([
+      ['parenthesizedExpressionNode', true],
+      ['leftExpressionNode', true],
+      ['rightExpressionNode', true],
+      ['unaryExpressionNode', true],
+      ['operatorNode', false],
+      ['variableNameNode', false],
+      ['constantNode', false],
+    ])
+      .map(([nodeName, isExpression]) => {
+        const parsedNodeName = nodeName.replace(/Node/, '');
 
-    console.log({
-      leftExpression: ctx.leftExpressionNode && ctx.leftExpressionNode.getText(),
-      operator: ctx.operatorNode && ctx.operatorNode.text,
-      rightExpression: ctx.rightExpressionNode && ctx.rightExpressionNode.getText(),
-      unaryExpression: ctx.unaryExpressionNode && ctx.unaryExpressionNode.getText(),
-      parenthesizedExpression: ctx.parenthesizedNode && ctx.parenthesizedNode.getText(),
-      variableName: ctx.variableNameNode && ctx.variableNameNode.text,
-      constantNode: ctx.constantNode && ctx.constantNode.text,
-    })
-	}
+        const node = context[nodeName];
+        if (!node) {
+          return null;
+        }
 
-	exitExpression(ctx) {
-    console.log('EXIT EXPR', ctx.getText());
-	}
+        return [
+          parsedNodeName,
+          isExpression
+            ? node.accept(this)
+            : node.text
+        ];
+      })
+      .reject(_.isNull)
+      .fromPairs()
+      .value();
+
+    const [,type] = [
+      ['constant','constant'],
+      ['variableName','variableName'],
+      ['leftExpression','binaryExpression'],
+      ['unaryExpresesionNode','unaryExpression'],
+      ['parenthesizedExpression','parenthesizedExpression'],
+    ]
+      .find(([propertyName]) => propertyName in properties);
+
+    return {
+      type,
+      input: context.getText(),
+      ...properties,
+    };
+  }
 }
 
 export const parseEquationString = (equationString) => {
@@ -30,5 +57,7 @@ export const parseEquationString = (equationString) => {
   const parser = new Parser(tokens);
   parser.buildParseTrees = true;
   const tree = parser.input();
-  antlr4.tree.ParseTreeWalker.DEFAULT.walk(new CustomListener(), tree)
+
+  const parsedExpression = tree.accept(new Visitor());
+  return parsedExpression;
 };
