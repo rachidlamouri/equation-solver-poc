@@ -50,7 +50,7 @@ class Visitor {
   }
 }
 
-export const parseEquationString = (equationString) => {
+export const parseExpression = (equationString) => {
   const chars = new antlr4.InputStream(equationString);
   const lexer = new Lexer(chars);
   const tokens = new antlr4.CommonTokenStream(lexer);
