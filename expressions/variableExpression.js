@@ -1,14 +1,10 @@
-export class VariableExpression {
-  constructor(name) {
-    this.name = name;
-  }
+import { Expression } from './expression.js';
 
-  static parse(variableName) {
-    if (!/^[a-zA-Z]+$/.test(variableName)) {
-      throw Error(`Invalid variable name "${variableName}", must contain letters only`);
-    }
-
-    return new VariableExpression(variableName);
+export class VariableExpression extends Expression{
+  constructor(properties) {
+    const { variableName } = properties;
+    super(properties);
+    this.name = variableName;
   }
 
   simplify() {

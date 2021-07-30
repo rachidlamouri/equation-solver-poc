@@ -1,30 +1,15 @@
-import { parseExpression } from './parseExpression.js';
+import { Expression } from './expression.js';
 import { UnaryExpression } from './unaryExpression.js';
 import { Equation } from '../equation.js';
 import { ConstantExpression } from './constantExpression.js';
 
-export class BinaryExpression {
-  constructor({ leftOperand, operator, rightOperand }) {
-    if (!['+', '-', '/', '*'].includes(operator)) {
-      throw Error(`Unexpected infix operator "${operator}"`);
-    }
-
-    this.leftOperand = leftOperand;
+export class BinaryExpression extends Expression {
+  constructor(properties) {
+    const { leftExpression, operator, rightExpression } = properties;
+    super(properties);
+    this.leftExpression = leftExpression;
     this.operator = operator;
-    this.rightOperand = rightOperand;
-  }
-
-  static parse(binaryExpression) {
-    if (binaryExpression.length !== 3) {
-      throw Error('Expected an array with 3 elements: leftExpression, operator, rightExpression');
-    }
-
-    const [leftExpression, operator, rightExpression] = binaryExpression;
-    return new BinaryExpression({
-      leftOperand: parseExpression(leftExpression),
-      operator,
-      rightOperand: parseExpression(rightExpression),
-    });
+    this.rightExpression = rightExpression;
   }
 
   static split(equation) {
@@ -32,29 +17,29 @@ export class BinaryExpression {
       throw Error('equation.leftExpression must be a BinaryExpression');
     }
 
-    const { leftOperand, operator, rightOperand } = equation.leftExpression;
+    const { leftExpression, operator, rightExpression } = equation.leftExpression;
 
     if (['-', '+'].includes(operator)) {
       const rightUnaryExpression = new UnaryExpression({
         operator,
-        operand: rightOperand,
+        expression: rightExpression,
       });
 
       const equationA = new Equation({
-        leftExpression: leftOperand,
+        leftExpression,
         rightExpression: new BinaryExpression({
-          leftOperand: equation.rightExpression,
+          leftExpression: equation.rightExpression,
           operator: '-',
-          rightOperand: rightUnaryExpression,
+          rightExpression: rightUnaryExpression,
         }),
       });
 
       const equationB = new Equation({
         leftExpression: rightUnaryExpression,
         rightExpression: new BinaryExpression({
-          leftOperand: equation.rightExpression,
+          leftExpression: equation.rightExpression,
           operator: '-',
-          rightOperand: leftOperand,
+          rightExpression: leftExpression,
         }),
       });
 
@@ -66,20 +51,20 @@ export class BinaryExpression {
 
     if (operator === '*') {
       const equationA = new Equation({
-        leftExpression: leftOperand,
+        leftExpression,
         rightExpression: new BinaryExpression({
-          leftOperand: equation.rightExpression,
+          leftExpression: equation.rightExpression,
           operator: '/',
-          rightOperand,
+          rightExpression,
         })
       });
 
       const equationB  = new Equation({
-        leftExpression: rightOperand,
+        leftExpression: rightExpression,
         rightExpression: new BinaryExpression({
-          leftOperand: equation.rightExpression,
+          leftExpression: equation.rightExpression,
           operator: '/',
-          rightOperand: leftOperand,
+          rightExpression: leftExpression,
         })
       });
 
@@ -90,20 +75,20 @@ export class BinaryExpression {
     }
 
     const equationA = new Equation({
-      leftExpression: leftOperand,
+      leftExpression,
       rightExpression: new BinaryExpression({
-        leftOperand: equation.rightExpression,
+        leftExpression: equation.rightExpression,
         operator: '*',
-        rightOperand,
+        rightExpression,
       })
     });
 
     const equationB  = new Equation({
-      leftExpression: rightOperand,
+      leftExpression: rightExpression,
       rightExpression: new BinaryExpression({
-        leftOperand,
+        leftExpression,
         operator: '/',
-        rightOperand: equation.rightExpression,
+        rightExpression: equation.rightExpression,
       })
     });
 
@@ -119,44 +104,44 @@ export class BinaryExpression {
     const isMultiplication = this.operator === '*';
     const isDivision = this.operator === '/';
 
-    const simplifiedLeftOperand = this.leftOperand.simplify();
-    const simplifiedRightOperand = this.rightOperand.simplify();
+    const simplifiedLeftExpression = this.leftExpression.simplify();
+    const simplifiedRightExpression = this.rightExpression.simplify();
 
-    const isLeftZero = (simplifiedLeftOperand instanceof ConstantExpression) && simplifiedLeftOperand.isZero()
-    const isRightZero = (simplifiedRightOperand instanceof ConstantExpression) && simplifiedRightOperand.isZero();
+    const isLeftZero = (simplifiedLeftExpression instanceof ConstantExpression) && simplifiedLeftExpression.isZero()
+    const isRightZero = (simplifiedRightExpression instanceof ConstantExpression) && simplifiedRightExpression.isZero();
 
-    const isLeftOne = (simplifiedLeftOperand instanceof ConstantExpression) && simplifiedLeftOperand.isOne()
-    const isRightOne = (simplifiedRightOperand instanceof ConstantExpression) && simplifiedRightOperand.isOne();
+    const isLeftOne = (simplifiedLeftExpression instanceof ConstantExpression) && simplifiedLeftExpression.isOne()
+    const isRightOne = (simplifiedRightExpression instanceof ConstantExpression) && simplifiedRightExpression.isOne();
 
-    const isLeftNegative = (simplifiedLeftOperand instanceof UnaryExpression) && simplifiedLeftOperand.isNegative();
-    const isRightNegative = (simplifiedRightOperand instanceof UnaryExpression) && simplifiedRightOperand.isNegative();
+    const isLeftNegative = (simplifiedLeftExpression instanceof UnaryExpression) && simplifiedLeftExpression.isNegative();
+    const isRightNegative = (simplifiedRightExpression instanceof UnaryExpression) && simplifiedRightExpression.isNegative();
 
     if ((isAddition || isSubtraction) && isLeftZero) {
       return new UnaryExpression({
         operator: this.operator,
-        operand: simplifiedRightOperand,
+        expression: simplifiedRightExpression,
       })
         .simplify();
     }
 
     if ((isAddition || isSubtraction) && isRightZero) {
-      return simplifiedLeftOperand;
+      return simplifiedLeftExpression;
     }
 
     if (isSubtraction && isRightNegative) {
       return new BinaryExpression({
-        leftOperand: simplifiedLeftOperand,
+        leftExpression: simplifiedLeftExpression,
         operator: '+',
-        rightOperand: simplifiedRightOperand.operand,
+        rightExpression: simplifiedRightExpression.expression,
       })
         .simplify();
     }
 
     if ((isMultiplication || isDivision) && isLeftNegative && isRightNegative) {
       return new BinaryExpression({
-        leftOperand: simplifiedLeftOperand.invert().simplify(),
+        leftExpression: simplifiedLeftExpression.invert().simplify(),
         operator: this.operator,
-        rightOperand: simplifiedRightOperand.invert().simplify(),
+        rightExpression: simplifiedRightExpression.invert().simplify(),
       })
         .simplify();
     }
@@ -164,10 +149,10 @@ export class BinaryExpression {
     if ((isMultiplication || isDivision) && isLeftNegative) {
       return new UnaryExpression({
         operator: '-',
-        operand: new BinaryExpression({
-          leftOperand: simplifiedLeftOperand.invert().simplify(),
+        expression: new BinaryExpression({
+          leftExpression: simplifiedLeftExpression.invert().simplify(),
           operator: this.operator,
-          rightOperand: simplifiedRightOperand,
+          rightExpression: simplifiedRightExpression,
         })
           .simplify(),
       });
@@ -176,31 +161,31 @@ export class BinaryExpression {
     if ((isMultiplication || isDivision) && isRightNegative) {
       return new UnaryExpression({
         operator: '-',
-        operand: new BinaryExpression({
-          leftOperand: simplifiedLeftOperand,
+        expression: new BinaryExpression({
+          leftExpression: simplifiedLeftExpression,
           operator: this.operator,
-          rightOperand: simplifiedRightOperand.invert().simplify(),
+          rightExpression: simplifiedRightExpression.invert().simplify(),
         })
           .simplify(),
       });
     }
 
     if ((isMultiplication || isDivision) && isRightOne) {
-      return simplifiedLeftOperand;
+      return simplifiedLeftExpression;
     }
 
     if (isMultiplication && isLeftOne) {
-      return simplifiedRightOperand;
+      return simplifiedRightExpression;
     }
 
     return new BinaryExpression({
-      leftOperand: simplifiedLeftOperand,
+      leftExpression: simplifiedLeftExpression,
       operator: this.operator,
-      rightOperand: simplifiedRightOperand,
+      rightExpression: simplifiedRightExpression,
     });
   }
 
   serialize() {
-    return `(${this.leftOperand.serialize()} ${this.operator} ${this.rightOperand.serialize()})`;
+    return `(${this.leftExpression.serialize()} ${this.operator} ${this.rightExpression.serialize()})`;
   }
 }

@@ -1,27 +1,14 @@
 import { Equation } from '../equation.js';
+import { Expression } from './expression.js';
+import { parseExpression } from './parseExpression.js';
 import { BinaryExpression } from './binaryExpression.js';
-import { ConstantExpression } from './constantExpression.js';
 
-export class UnaryExpression {
-  constructor({ operator, operand }) {
-    if (!['+', '-'].includes(operator)) {
-      throw Error(`Unexpected unary operator "${operator}"`);
-    }
-
+export class UnaryExpression extends Expression {
+  constructor(properties) {
+    const { operator, expression } = properties;
+    super(properties);
     this.operator = operator;
-    this.operand = operand;
-  }
-
-  static parse(unaryExpression) {
-    if (unaryExpression.length !== 2) {
-      throw Error('Expected an array with 2 elements: operator, rightExpression');
-    }
-
-    const [operator, expression] = unaryExpression;
-    return new UnaryExpression({
-      operator,
-      operand: expression,
-    });
+    this.expression = expression;
   }
 
   static split(equation) {
@@ -30,11 +17,11 @@ export class UnaryExpression {
     }
 
     return new Equation({
-      leftExpression: equation.leftExpression.operand,
+      leftExpression: equation.leftExpression.expression,
       rightExpression: new BinaryExpression({
-        leftOperand: equation.rightExpression,
+        leftExpression: equation.rightExpression,
         operator: '/',
-        rightOperand: ConstantExpression.parse(equation.leftExpression.operator === '+' ? 1 : -1),
+        rightExpression: parseExpression(equation.leftExpression.operator === '+' ? '1' : '-1'),
       }),
     })
   }
@@ -46,26 +33,26 @@ export class UnaryExpression {
   invert() {
     return new UnaryExpression({
       operator: this.operator === '+' ? '-': '+',
-      operand: this.operand,
+      expression: this.expression,
     });
   }
 
   simplify() {
     if (this.operator === '+') {
-      return this.operand.simplify();
+      return this.expression.simplify();
     }
 
-    if (this.isNegative() && (this.operand instanceof UnaryExpression) && this.operand.isNegative()) {
-      return this.operand.operand.simplify();
+    if (this.isNegative() && (this.expression instanceof UnaryExpression) && this.expression.isNegative()) {
+      return this.expression.expression.simplify();
     }
 
     return new UnaryExpression({
       operator: this.operator,
-      operand: this.operand.simplify(),
+      expression: this.expression.simplify(),
     });
   }
 
   serialize() {
-    return `(${this.operator}${this.operand.serialize()})`;
+    return `(${this.operator}${this.expression.serialize()})`;
   }
 }

@@ -1,19 +1,10 @@
-import { UnaryExpression } from './unaryExpression.js';
+import { Expression } from './expression.js';
 
-export class ConstantExpression{
-  constructor(value) {
-    this.value = value;
-  }
-
-  static parse(value) {
-    const constantExpression = new ConstantExpression(Math.abs(value));
-
-    return value < 0
-      ? new UnaryExpression({
-        operator: '-',
-        operand: constantExpression
-      })
-      : constantExpression;
+export class ConstantExpression extends Expression{
+  constructor(properties) {
+    const { constantValue } = properties;
+    super(properties);
+    this.value = constantValue;
   }
 
   isZero() {

@@ -1,5 +1,12 @@
 import _ from 'lodash';
+import { Equation } from './equation.js';
 import { parseExpression } from './expressions/index.js';
+
+const log = (label, data) => {
+  console.log(label);
+  console.log(JSON.stringify(data, null, 2));
+  console.log();
+};
 
 const inputs = _([
   // single value
@@ -43,8 +50,19 @@ const inputs = _([
 ])
   .map((expression, index) => [`x${index}`, expression])
   .fromPairs()
+  .tap((input) => {
+    log('INPUT', input);
+  })
   .mapValues((expression, key) => `${key} - (${expression})`)
   .mapValues((expression) => parseExpression(expression))
+  .mapValues((parsedExpression) => new Equation({
+    leftExpression: parsedExpression,
+    rightExpression: parseExpression('0'),
+  }))
+  .tap((equations) => {
+    const serializedEquations = Object.entries(equations).map(([, equation]) => equation.serialize());
+    log('PARSED', serializedEquations);
+  })
   .value();
 
 console.log(JSON.stringify(inputs, null, 2));
