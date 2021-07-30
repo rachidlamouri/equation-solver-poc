@@ -37,7 +37,7 @@ class Visitor {
       ['constant','constant'],
       ['variableName','variableName'],
       ['leftExpression','binaryExpression'],
-      ['unaryExpresesionNode','unaryExpression'],
+      ['unaryExpression','unaryExpression'],
       ['parenthesizedExpression','parenthesizedExpression'],
     ]
       .find(([propertyName]) => propertyName in properties);

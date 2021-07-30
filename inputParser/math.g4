@@ -11,7 +11,7 @@ expression:
   | constantNode=NUMBER
   ;
 
-LABEL: [a-z]+ [A-z]* ;
+LABEL: [a-z]+ ([A-z]|[0-9])* ;
 
 NUMBER:
   DIGIT* '.' DIGIT+
