@@ -26,6 +26,10 @@ export class UnaryExpression extends Expression {
     })
   }
 
+  getVariableNames() {
+    return this.expression.getVariableNames();
+  }
+
   isNegative() {
     return this.operator === '-';
   }
@@ -54,5 +58,13 @@ export class UnaryExpression extends Expression {
 
   serialize() {
     return `(${this.operator}${this.expression.serialize()})`;
+  }
+
+  compute(variables) {
+    const value = this.expression.compute(variables);
+
+    return this.operator === '+'
+      ? value
+      : -value;
   }
 }

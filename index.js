@@ -72,17 +72,57 @@ _([
   })
   .map((data) => ({
     ...data,
-    solvedEquations: isolateVariables(data.parsedEquation),
+    equationSystem: isolateVariables(data.parsedEquation),
   }))
   .tap((allData) => {
-    const allSerializedSolvedEquations = (
+    const serializedEquationSystem = (
       _(allData)
         .keyBy('serializedInput')
-        .mapValues(({ solvedEquations }) => solvedEquations.map((equation) => equation.simplify().serialize()))
+        .mapValues(({ equationSystem }) => equationSystem.serialize())
         .value()
     );
 
-    log('SOLVED', allSerializedSolvedEquations);
-    fs.writeFileSync('./out.json', JSON.stringify(allSerializedSolvedEquations, null, 2));
+    log('SOLVED', serializedEquationSystem);
+    fs.writeFileSync('./out.json', JSON.stringify(serializedEquationSystem, null, 2));
+  })
+  .map((data, index) => {
+    const variables = {
+      x: 1,
+      a: 2,
+      b: 3,
+      c: 4,
+      d: 5,
+      e: 6,
+      f: 7,
+      g: 8,
+    }
+
+    const availableVariableNames = data.parsedEquation.getVariableNames();
+
+    return {
+      ...data,
+      results: availableVariableNames.map((variableName) => {
+        const inputVariables = _.pick(variables, availableVariableNames);
+        inputVariables[variableName] = null;
+        const solvedVariables = data.equationSystem.compute(inputVariables);
+
+        return {
+          input: inputVariables,
+          output: solvedVariables,
+        };
+      })
+    };
+  })
+  .tap((allData) => {
+    const serializedResults = allData.map(({ serializedInput, results }) => (
+      results.map(({ input, output}) => ({
+        equation: serializedInput,
+        input,
+        output,
+      }))
+    ))
+      .flat();
+
+    fs.writeFileSync('./out2.json', JSON.stringify(serializedResults, null, 2));
   })
   .value();

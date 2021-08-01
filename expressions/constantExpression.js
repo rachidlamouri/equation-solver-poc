@@ -7,6 +7,10 @@ export class ConstantExpression extends Expression{
     this.value = parseFloat(constantValue);
   }
 
+  getVariableNames() {
+    return [];
+  }
+
   isZero() {
     return this.value === 0;
   }
@@ -21,5 +25,9 @@ export class ConstantExpression extends Expression{
 
   serialize() {
     return `${this.value}`;
+  }
+
+  compute() {
+    return this.value;
   }
 }

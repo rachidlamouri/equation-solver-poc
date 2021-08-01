@@ -98,6 +98,13 @@ export class BinaryExpression extends Expression {
     ];
   }
 
+  getVariableNames() {
+    return [
+      ...this.leftExpression.getVariableNames(),
+      ...this.rightExpression.getVariableNames(),
+    ];
+  }
+
   simplify() {
     const isAddition = this.operator === '+';
     const isSubtraction = this.operator === '-';
@@ -187,5 +194,17 @@ export class BinaryExpression extends Expression {
 
   serialize() {
     return `(${this.leftExpression.serialize()} ${this.operator} ${this.rightExpression.serialize()})`;
+  }
+
+  compute(variables) {
+    const leftValue = this.leftExpression.compute(variables);
+    const rightValue = this.rightExpression.compute(variables);
+
+    switch (this.operator) {
+      case '+': return leftValue + rightValue;
+      case '-': return leftValue - rightValue;
+      case '/': return leftValue / rightValue;
+      default: return leftValue * rightValue;
+    }
   }
 }

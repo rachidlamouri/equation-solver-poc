@@ -7,11 +7,19 @@ export class VariableExpression extends Expression{
     this.name = variableName;
   }
 
+  getVariableNames() {
+    return [this.name];
+  }
+
   simplify() {
     return this;
   }
 
   serialize() {
     return `${this.name}`;
+  }
+
+  compute(variables) {
+    return variables[this.name];
   }
 }

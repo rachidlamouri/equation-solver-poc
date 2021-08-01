@@ -4,6 +4,7 @@ import {
   UnaryExpression,
   VariableExpression,
 } from './expressions/index.js';
+import { EquationSystem } from './equationSystem.js';
 
 const parseEquations = (equations, parsedEquations = []) => {
   if (equations.length === 0) {
@@ -40,4 +41,4 @@ const parseEquations = (equations, parsedEquations = []) => {
   )
 };
 
-export const isolateVariables = (equation) => parseEquations([equation]);
+export const isolateVariables = (equation) => new EquationSystem(parseEquations([equation]));
